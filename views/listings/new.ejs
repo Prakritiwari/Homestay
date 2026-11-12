@@ -1,75 +1,67 @@
 <% layout("/layouts/boilerplate") %>
-<body>
-    <div class="row mt-3">
-        <div class="col-8 offset-2">
-          
-    <h3>Create a new Listing</h3>
-   
-    <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data" >
-     <div class="mb-3">
-        <label for="title" class="form-label">Title</label>
-        <input type="text" name="listing[title]" placeholder="enter Title" class="form-control" required>
-     </div>
-     <div class="valid-feedback">Good Title!</div>
-     
-        <div class="mb-3">
-            <label for="description" class="form-label">Description</label>
-            <textarea name="listing[description]" placeholder="enter description for the site" class="form-control" required></textarea>
-            <div class="invalid-feedback">Enter valid description</div>
-        </div>
+<%
+  const categories = ["Trending","Rooms","Iconic Cities","Mountains","Castles","Amazing Pools","Camping","Farms","Arctic","Domes","Boats"];
+%>
 
-        <div class="mb-3">
-            <label for="category" class="form-label">Select Category</label>
-           <select class="form-select" aria-label="Default select example" name="listing[category]">
-                <option value = "Trending"selected>Trending</option>
-                <option value="Trending">Trending</option>
-                <option value="Rooms"> Rooms</option>
-                <option value="Iconic Cities">Iconic Cities</option>
-                <option value="Mountains">Mountains</option>
-                <option value="Castles">Castles</option>
-                <option value="Amazing Pools">Amazing Pools</option>
-                <option value="Camping">Camping</option>
-                <option value="Farms">Farms</option>
-                <option value="Arctic">Arctic</option>
-                <option value="Domes">Domes</option>
-                <option value="Boats">BoatsBoats</option>
-            </select>
-        </div>
-  
+<div class="form-card">
+  <h3>List your place</h3>
+  <p class="form-sub">Share a few details and photos — guests will see it instantly.</p>
 
-         <div class="mb-3">
-            <label for="image" class="form-label">Image URL/link</label>
-            <input type="file" name="listing[image]" placeholder="enter image URL/link" class="form-control" required>
-            
-        </div>
-        
-        <div class="row">
-   
-        <div class="mb-3 col-md-4">
-            <label for="price" class="form-label">Price</label>
-            <input name="listing[price]" placeholder="enter price" class="form-control" required>
-            <div class="invalid-feedback">Enter valid price</div>
-        </div>
-        
-
-        <div class="mb-3 col-md-8">
-            <label for="country" class="form-label">Country</label>
-            <input type="text" name="listing[country]" placeholder="enter country" class="form-control" required>
-            <div class="invalid-feedback">Enter valid Country name</div>
-        </div>
-        
+  <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" id="title" name="listing[title]" placeholder="e.g. Cozy beachfront cottage" class="form-control" required>
+      <div class="invalid-feedback">Please enter a title.</div>
     </div>
 
-        <div class="mb-3">
-            <label for="location" class="form-label">Location</label>
-            <input type="text" name="listing[location]" placeholder="enter location" class="form-control" required>
-            <div class="invalid-feedback">Enter valid Location</div>
-        </div>
-       
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea id="description" name="listing[description]" rows="4" placeholder="What makes this place special?" class="form-control" required></textarea>
+      <div class="invalid-feedback">Please enter a description.</div>
+    </div>
 
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select class="form-select" id="category" name="listing[category]" required>
+          <% categories.forEach(function(category){ %>
+            <option value="<%= category %>" <%= category === "Trending" ? "selected" : "" %>><%= category %></option>
+          <% }); %>
+        </select>
+      </div>
 
-        <button class="btn btn-dark add-btn mt-3">Submit</button>
-    </form>
+      <div class="col-md-6 mb-3">
+        <label for="price" class="form-label">Price per night (&#8377;)</label>
+        <input type="number" id="price" name="listing[price]" placeholder="1500" min="0" step="1" class="form-control" required>
+        <div class="invalid-feedback">Enter a valid price.</div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="country" class="form-label">Country</label>
+        <input type="text" id="country" name="listing[country]" placeholder="India" class="form-control" required>
+        <div class="invalid-feedback">Enter a country.</div>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="location" class="form-label">Location</label>
+        <input type="text" id="location" name="listing[location]" placeholder="Jaipur" class="form-control" required>
+        <div class="invalid-feedback">Enter a location.</div>
+      </div>
+    </div>
+    <p class="form-hint"><i class="fa-solid fa-location-crosshairs me-1"></i>We use the location to place your listing on the map automatically.</p>
+
+    <div class="mb-3 mt-3">
+      <label for="listingImage" class="form-label">Photo</label>
+      <input type="file" id="listingImage" name="listing[image]" accept="image/png, image/jpeg, image/jpg" class="form-control" required data-image-preview="newImagePreview">
+      <div class="form-hint">PNG or JPG, up to 10 MB. Landscape photos look best.</div>
+      <img id="newImagePreview" class="image-preview d-none" alt="Selected photo preview">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-brand"><i class="fa-solid fa-plus me-1"></i>Create listing</button>
+      <a href="/listings" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
 </div>
-</div>
-</body>

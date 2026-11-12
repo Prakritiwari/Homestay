@@ -1,0 +1,188 @@
+<% layout("/layouts/boilerplate") %>
+
+<%
+  const user = typeof currUser !== "undefined" ? currUser : null;
+  const quickCategories = ["Trending", "Mountains", "Amazing Pools", "Iconic Cities"];
+%>
+
+<section class="dash-hero">
+  <div class="dash-hero-content">
+    <span class="dash-eyebrow"><i class="fa-solid fa-compass"></i> Homestay dashboard</span>
+    <h1>
+      <% if(user){ %>
+        <%= greeting %>, <%= user.username %>.
+      <% } else { %>
+        Find a place that feels like home.
+      <% } %>
+    </h1>
+    <p>
+      <% if(user){ %>
+        Here&rsquo;s what&rsquo;s happening across Homestay today — discover new stays, manage your listings and keep hosting.
+      <% } else { %>
+        Handpicked cabins, villas and city lofts. Explore stays, compare honest prices and find your next getaway.
+      <% } %>
+    </p>
+    <div class="hero-actions">
+      <a href="/listings" class="btn btn-brand">Explore stays <i class="fa-solid fa-arrow-right ms-1"></i></a>
+      <% if(user){ %>
+        <a href="/listings/new" class="btn btn-ghost"><i class="fa-solid fa-plus me-1"></i>List a place</a>
+        <a href="/bookings" class="btn btn-ghost"><i class="fa-regular fa-calendar-check me-1"></i>My trips</a>
+      <% } else { %>
+        <a href="/signup" class="btn btn-ghost">Create an account</a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="dash-search-card">
+    <h2>Where to next?</h2>
+    <p>Search by city, country or category.</p>
+    <form action="/listings" method="GET" class="dash-search-form">
+      <div class="search-pill">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="search" name="query" placeholder="Try &lsquo;Bali&rsquo; or &lsquo;Mountains&rsquo;" aria-label="Search stays">
+        <button class="btn btn-brand" type="submit">Search</button>
+      </div>
+    </form>
+    <div class="dash-quick-links">
+      <% quickCategories.forEach(function(category){ %>
+        <a href="/listings?category=<%= encodeURIComponent(category) %>"><%= category %></a>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<div class="dash-stats">
+  <article class="stat-card">
+    <span class="stat-icon"><i class="fa-solid fa-house-chimney"></i></span>
+    <div>
+      <span class="stat-value"><%= totalListings %></span>
+      <span class="stat-label">Stays listed</span>
+      <span class="stat-hint">Ready to book</span>
+    </div>
+  </article>
+
+  <article class="stat-card">
+    <span class="stat-icon"><i class="fa-solid fa-location-dot"></i></span>
+    <div>
+      <span class="stat-value"><%= destinationCount %></span>
+      <span class="stat-label">Destinations</span>
+      <span class="stat-hint">Cities &amp; regions</span>
+    </div>
+  </article>
+
+  <article class="stat-card">
+    <span class="stat-icon"><i class="fa-solid fa-user-group"></i></span>
+    <div>
+      <span class="stat-value"><%= totalHosts %></span>
+      <span class="stat-label">Hosts</span>
+      <span class="stat-hint">In the community</span>
+    </div>
+  </article>
+
+  <article class="stat-card">
+    <span class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></span>
+    <div>
+      <span class="stat-value">
+        <% if(averagePrice){ %>&#8377;<%= averagePrice.toLocaleString("en-IN") %><% } else { %>&mdash;<% } %>
+      </span>
+      <span class="stat-label">Avg. per night</span>
+      <span class="stat-hint">Before taxes</span>
+    </div>
+  </article>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-8">
+    <section class="dash-section">
+      <div class="dash-section-head">
+        <div>
+          <h2>Top stays right now</h2>
+          <p>Highest rated and newest places from our hosts.</p>
+        </div>
+        <a href="/listings" class="dash-view-all">View all <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+
+      <% if(featuredListings.length){ %>
+        <div class="row row-cols-1 row-cols-sm-2 g-4">
+          <% for(const listing of featuredListings){ %>
+            <div class="col">
+              <%- include("listings/card.ejs", { listing: listing }) %>
+            </div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="empty-state py-4">
+          <i class="fa-regular fa-face-frown-open"></i>
+          <h4>No stays yet</h4>
+          <p class="mb-0">New places will appear here as soon as hosts list them.</p>
+        </div>
+      <% } %>
+    </section>
+  </div>
+
+  <div class="col-lg-4">
+    <aside class="dash-panel">
+      <div class="dash-panel-head">
+        <h2><i class="fa-solid fa-layer-group"></i> Browse by category</h2>
+        <a href="/listings" class="dash-view-all">All</a>
+      </div>
+      <div class="dash-category-list">
+        <% categoryStats.forEach(function(category){ %>
+          <a href="/listings?category=<%= encodeURIComponent(category.name) %>" class="dash-category-row">
+            <span class="dash-category-icon"><i class="<%= category.icon %>"></i></span>
+            <span class="dash-category-name"><%= category.name %></span>
+            <span class="dash-category-count"><%= category.count %></span>
+          </a>
+        <% }); %>
+      </div>
+    </aside>
+
+    <% if(user){ %>
+      <aside class="dash-panel dash-hosting">
+        <div class="dash-panel-head">
+          <h2><i class="fa-solid fa-key"></i> Your hosting</h2>
+          <a href="/listings/mine" class="dash-view-all">Manage</a>
+        </div>
+
+        <div class="dash-hosting-stats">
+          <div>
+            <strong><%= hosting.listingCount %></strong>
+            <span>Listing<%= hosting.listingCount === 1 ? "" : "s" %></span>
+          </div>
+          <div>
+            <strong><%= hosting.reviewCount %></strong>
+            <span>Review<%= hosting.reviewCount === 1 ? "" : "s" %></span>
+          </div>
+        </div>
+
+        <% if(hosting.latest.length){ %>
+          <div class="dash-mini-list">
+            <% hosting.latest.forEach(function(listing){ %>
+              <a href="/listings/<%= listing._id %>" class="dash-mini-row">
+                <% if(listing.image && listing.image.url){ %>
+                  <img src="<%= listing.image.url %>" alt="<%= listing.title %>" class="dash-mini-img">
+                <% } else { %>
+                  <span class="dash-mini-img dash-mini-placeholder"><i class="fa-regular fa-image"></i></span>
+                <% } %>
+                <span class="dash-mini-title"><%= listing.title %></span>
+                <i class="fa-solid fa-chevron-right"></i>
+              </a>
+            <% }); %>
+          </div>
+          <a href="/listings/new" class="btn btn-ghost w-100 mt-3"><i class="fa-solid fa-plus me-1"></i>Add another place</a>
+        <% } else { %>
+          <p class="dash-muted">You haven&rsquo;t listed a place yet. Share your home and start earning.</p>
+          <a href="/listings/new" class="btn btn-brand w-100">List your first place</a>
+        <% } %>
+      </aside>
+    <% } else { %>
+      <aside class="dash-panel dash-cta">
+        <span class="dash-cta-icon"><i class="fa-solid fa-house-chimney-user"></i></span>
+        <h2>Become a host</h2>
+        <p>Share your place with travellers and earn from every night booked.</p>
+        <a href="/signup" class="btn btn-brand w-100">Get started</a>
+        <a href="/login" class="dash-login-link">I already have an account</a>
+      </aside>
+    <% } %>
+  </div>
+</div>

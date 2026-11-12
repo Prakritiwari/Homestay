@@ -1,109 +1,122 @@
 <% layout("/layouts/boilerplate") %>
 
+<%
+  const isSearch = typeof searchQuery !== "undefined" && searchQuery;
+  const isFiltered = typeof activeCategory !== "undefined" && activeCategory;
+  const isMine = typeof isMyListings !== "undefined" && isMyListings;
 
-<body>
- 
-    <!-- <h2>All Listings</h2> -->
-    <!-- <form method="GET" action="/listings/new">
-        <button>Add new Listing</button>
-    </form> -->
-    
+  const fMinPrice = typeof priceFilter !== "undefined" && priceFilter.min !== "" ? priceFilter.min : "";
+  const fMaxPrice = typeof priceFilter !== "undefined" && priceFilter.max !== "" ? priceFilter.max : "";
+  const fMinRating = typeof ratingFilter !== "undefined" && ratingFilter.min !== "" ? ratingFilter.min : "";
+  const hasFilters = Boolean(isSearch || isFiltered || fMinPrice !== "" || fMaxPrice !== "" || fMinRating !== "");
 
-    <div id="filters">
-      <div class="filter">
-        <div ><a class = "filterOptions" href="/listings/filter/Trending"><i class="fa-solid fa-fire"></i></a></div>
-        <p>Trending</p>
-      </div>
+  const showHero = !hasFilters && !isMine;
+  const headingText = typeof heading !== "undefined" ? heading : (isSearch ? "Search results" : "Explore stays");
+  const sortValue = typeof currentSort !== "undefined" ? currentSort : "oldest";
+%>
 
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Rooms"><i class="fa-solid fa-bed"></a></i></div>
-        <p>Rooms</p>
-      </div> 
-
-        <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Iconic Cities"><i class="fa-solid fa-mountain-city"></i></a></div>
-        <p>Iconic Cities</p>
-      </div>
-
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Mountains"><i class="fa-solid fa-mountain"></i></a></div>
-        <p>Mountains</p>
-      </div>
-    
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Castles"><i class="fa-brands fa-fort-awesome"></i></a></div>
-        <p>Castles</p>
-      </div>
-
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Amazing Pools"></a><i class="fa-solid fa-person-swimming"></i></a></div>
-        <p>Amazing Pools
-        </p>
-      </div>
-    
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Camping"></a><i class="fa-solid fa-campground"></i></a></div>
-        <p>Camping</p>
-      </div>
-
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Farms"><i class="fa-solid fa-cow"></i></a></div>
-        <p>Farms</p>
-      </div>
-
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Arctic"></a><i class="fa-solid fa-snowflake"></i></a></div>
-        <p>Arctic</p>
-      </div>
-
-        <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Domes"></a><i class="fa-solid fa-igloo"></i></a></div>
-        <p>Domes</p>
-      </div>
-
-      <div class="filter">
-        <div><a class = "filterOptions" href="/listings/filter/Boats"></a><i class="fa-solid fa-ship"></i></a></div>
-        <p>Boats</p>
-      </div>
-
-      <div class="tax-toggle">
-        <div class="form-check-reverse form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" id="flexswitchCheckDefault">
-        <label class="form-check-label" for="flexswitchCheckDefault">Display total after taxes</label>
-</div>
-      </div>
-      </div>
-  
-
-    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
-        <% for(listing of allListings){ %>
-            <a href="/listings/<%=listing._id%>" class="listing-link">
-            <div class="card col listing-card" >
-                <img src="<%=listing.image.url%>" class="card-img-top" alt="listing_image" style="height: 20rem;">
-                <div class="card-img-overlay"><%= listing.title %></div>
-                <div class="card-body">
-                  <p class="card-text">
-                    <b><%= listing.title %> </b><br>
-                    &#8377;<%= listing.price.toLocaleString("en-IN") %>/night
-                    <i class="tax-info">&nbsp; &nbsp; +18% GST</i>
-                  </p>
-                </div>
-              </div>
-            </a>
-              <%  } %>
+<% if(showHero){ %>
+  <section class="hero">
+    <span class="hero-eyebrow"><i class="fa-solid fa-wand-magic-sparkles"></i> Curated stays, real homes</span>
+    <h1>Find your next home away from home.</h1>
+    <p>Handpicked cabins, villas and city lofts with honest prices, verified photos and locations you can explore on the map.</p>
+    <div class="hero-actions">
+      <a href="#stays" class="btn btn-brand">Browse stays <i class="fa-solid fa-arrow-down ms-1"></i></a>
+      <a href="/listings/new" class="btn btn-ghost">Become a host</a>
     </div>
-</body>
-<script>
-  let taxSwitch = document.getElementById("flexSwitchCheckDefault");
-  taxSwitch.addEventListener( "click", () => {
-    let taxInfo = document.getElementByClass("tax-info");
-    for(info of taxInfo){
-      if(info.style.display != "inline"){
-        info.style.display = "inline";
-      } else{
-        info.style.display = "none";
-      }
-      
-    }
-  });
-</script>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>11</strong><span>Stay categories</span></div>
+      <div class="hero-stat"><strong>Map</strong><span>Powered locations</span></div>
+      <div class="hero-stat"><strong>GST</strong><span>Clear pricing</span></div>
+    </div>
+  </section>
+<% } %>
+
+<% if(!isMine){ %>
+  <%- include("../includes/filters.ejs") %>
+<% } %>
+
+<div class="listings-layout <%= isMine ? 'no-sidebar' : '' %>" id="stays">
+  <% if(!isMine){ %>
+    <aside class="filters-sidebar">
+      <button class="btn btn-ghost filter-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#filterPanelCollapse" aria-expanded="false" aria-controls="filterPanelCollapse">
+        <i class="fa-solid fa-sliders"></i> Filters
+        <% if(hasFilters){ %><span class="filter-count" aria-label="Filters applied"></span><% } %>
+      </button>
+      <div class="collapse d-lg-block" id="filterPanelCollapse">
+        <%- include("../includes/filter-panel.ejs") %>
+      </div>
+    </aside>
+  <% } %>
+
+  <section class="listings-results">
+    <div class="listings-toolbar">
+      <div>
+        <h2><%= headingText %></h2>
+        <div class="result-count">
+          <%= allListings.length %> stay<%= allListings.length === 1 ? "" : "s" %>
+          <% if(isSearch){ %> for &ldquo;<%= searchQuery %>&rdquo;<% } %>
+          <% if(isFiltered){ %> in <%= activeCategory %><% } %>
+          <% if(fMinPrice !== "" || fMaxPrice !== "" || fMinRating !== ""){ %> matching your filters<% } %>
+        </div>
+      </div>
+
+      <div class="toolbar-actions">
+        <% if(!isSearch && !isMine){ %>
+          <form method="GET" action="/listings" class="m-0">
+            <% if(isFiltered){ %><input type="hidden" name="category" value="<%= activeCategory %>"><% } %>
+            <% if(fMinPrice !== ""){ %><input type="hidden" name="minPrice" value="<%= fMinPrice %>"><% } %>
+            <% if(fMaxPrice !== ""){ %><input type="hidden" name="maxPrice" value="<%= fMaxPrice %>"><% } %>
+            <% if(fMinRating !== ""){ %><input type="hidden" name="minRating" value="<%= fMinRating %>"><% } %>
+            <select name="sort" id="sortSelect" class="sort-select" aria-label="Sort listings" onchange="this.form.submit()">
+              <option value="oldest" <%= sortValue === "oldest" ? "selected" : "" %>>Recommended</option>
+              <option value="newest" <%= sortValue === "newest" ? "selected" : "" %>>Newest first</option>
+              <option value="price_asc" <%= sortValue === "price_asc" ? "selected" : "" %>>Price: low to high</option>
+              <option value="price_desc" <%= sortValue === "price_desc" ? "selected" : "" %>>Price: high to low</option>
+            </select>
+          </form>
+        <% } %>
+
+        <div class="tax-toggle">
+          <input class="form-check-input" type="checkbox" role="switch" id="flexswitchCheckDefault">
+          <label class="form-check-label" for="flexswitchCheckDefault">Show totals incl. GST</label>
+        </div>
+
+        <% if(!isMine && hasFilters){ %>
+          <a href="/listings" class="btn btn-ghost btn-sm clear-filters">Clear</a>
+        <% } %>
+      </div>
+    </div>
+
+    <% if(allListings.length > 0){ %>
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-2 row-cols-xl-3 g-4">
+        <% for(const listing of allListings){ %>
+          <div class="col">
+            <%- include("card.ejs", { listing: listing }) %>
+          </div>
+        <% } %>
+      </div>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fa-regular fa-face-frown-open"></i>
+        <% if(isSearch){ %>
+          <h4>No stays found</h4>
+          <p>We couldn&rsquo;t find anything for &ldquo;<%= searchQuery %>&rdquo;. Try a city, country or category.</p>
+          <a href="/listings" class="btn btn-brand">Clear search</a>
+        <% } else if(isMine){ %>
+          <h4>You haven&rsquo;t listed a place yet</h4>
+          <p>Share your home with travellers and start hosting today.</p>
+          <a href="/listings/new" class="btn btn-brand">List your place</a>
+        <% } else if(hasFilters){ %>
+          <h4>No stays match your filters</h4>
+          <p>Try widening your price range, lowering the rating or choosing another category.</p>
+          <a href="/listings" class="btn btn-brand">Clear filters</a>
+        <% } else { %>
+          <h4>No stays available right now</h4>
+          <p>Check back soon or list your own place.</p>
+          <a href="/listings/new" class="btn btn-brand">List your place</a>
+        <% } %>
+      </div>
+    <% } %>
+  </section>
+</div>

@@ -1,80 +1,67 @@
 <% layout("/layouts/boilerplate") %>
-<body>
-    <div class="row mt-3">
-        <div class="col-8 offset-2">
-    <h3>Edit the listing</h3>
-    <form method="POST" action="/listings/<%=listing._id%>?_method=PUT"
-         novalidate 
-         class="needs-validation"
-         enctype="multipart/form-data">
-            <div class="mb-3">
-               <label for="title" class="form-label">Title</label>
-               <input type="text" name="listing[title]" placeholder="enter Title" value="<%=listing.title%>" class="form-control" required>
-            </div>
-            
-               <div class="mb-3">
-                   <label for="description" class="form-label">Description</label>
-                   <textarea name="listing[description]" placeholder="enter description for the site" class="form-control" required><%=listing.description%></textarea>
-                   <div class="invalid-feedback">Enter valid description</div>
-               </div>
+<%
+  const categories = ["Trending","Rooms","Iconic Cities","Mountains","Castles","Amazing Pools","Camping","Farms","Arctic","Domes","Boats"];
+  const currentCategory = listing.category || "Trending";
+%>
 
-     <div class="mb-3">
-            <label for="category" class="form-label">Select Category</label>
-           <select class="form-select" aria-label="Default select example" name="listing[category]">
-                <option selected><%= listing.category %></option>
-                <option value="Trending">Trending</option>
-                <option value="Rooms">Rooms</option>
-                <option value="Iconic Cities">Iconic Cities</option>
-                <option value="Mountains">Mountains</option>
-                <option value="Castles">Castles</option>
-                <option value="Amazing Pools">Amazing Pools</option>
-                <option value="Camping">Camping</option>
-                <option value="Farms">Farms</option>
-                <option value="Arctic">Arctic</option>
-                <option value="Domes">Domes</option>
-                <option value="Boats">BoatsBoats</option>
-            </select>
-        </div>
+<div class="form-card">
+  <h3>Edit listing</h3>
+  <p class="form-sub">Update the details guests see on your stay page.</p>
 
-               <div class="mb-3">
-                <p>Original Listing Image</p>
-                <img src="<%=originalImageUrl%>" alt="listingimg">
-               </div>
-           
-               <div class="mb-3">
-                   <label for="image" class="form-label">Upload New Image</label>
-                   <input type="file" name="listing[image]" placeholder="enter image URL/link"  class="form-control" >
-                   
-               </div>
-               
-               <div class="row">
-          
-               <div class="mb-3 col-md-4">
-                   <label for="price" class="form-label">Price</label>
-                   <input type="number" name="listing[price]" placeholder="enter price"  value="<%=listing.price%>" class="form-control" required>
-                   <div class="invalid-feedback">Enter valid price</div>
-               </div>
-               
-               <div class="mb-3 col-md-8">
-                   <label for="country" class="form-label">Country</label>
-                   <input type="text" name="listing[country]" placeholder="enter country" value="<%=listing.country%>" class="form-control" required>
-                   <div class="invalid-feedback">Enter valid Country name</div>
-               </div>
-           </div>
-       
-               <div class="mb-3">
-                   <label for="location" class="form-label">Location</label>
-                   <input type="text" name="listing[location]" placeholder="enter location" value="<%=listing.location%>" class="form-control" required>
-                   <div class="invalid-feedback">Enter valid Location</div>
-               </div>
-       
-       <% if(currUser && listing.owner._id.equals(currUser._id) && currUser) { %>
-               <button class="btn btn-dark add-btn mt-3">Edit</button>
-               <br><br>
-               <% } %>
-          
-    </form>
+  <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" novalidate class="needs-validation" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label for="title" class="form-label">Title</label>
+      <input type="text" id="title" name="listing[title]" value="<%= listing.title %>" class="form-control" required>
     </div>
+
+    <div class="mb-3">
+      <label for="description" class="form-label">Description</label>
+      <textarea id="description" name="listing[description]" rows="4" class="form-control" required><%= listing.description %></textarea>
     </div>
-   
-</body>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select class="form-select" id="category" name="listing[category]" required>
+          <% categories.forEach(function(category){ %>
+            <option value="<%= category %>" <%= category === currentCategory ? "selected" : "" %>><%= category %></option>
+          <% }); %>
+        </select>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="price" class="form-label">Price per night (&#8377;)</label>
+        <input type="number" id="price" name="listing[price]" value="<%= listing.price %>" min="0" step="1" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="country" class="form-label">Country</label>
+        <input type="text" id="country" name="listing[country]" value="<%= listing.country %>" class="form-control" required>
+      </div>
+
+      <div class="col-md-6 mb-3">
+        <label for="location" class="form-label">Location</label>
+        <input type="text" id="location" name="listing[location]" value="<%= listing.location %>" class="form-control" required>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">Current photo</label>
+      <img src="<%= originalImageUrl %>" class="existing-image" alt="Current listing photo">
+    </div>
+
+    <div class="mb-3">
+      <label for="listingImage" class="form-label">Upload a new photo</label>
+      <input type="file" id="listingImage" name="listing[image]" accept="image/png, image/jpeg, image/jpg" class="form-control" data-image-preview="editImagePreview">
+      <div class="form-hint">Leave empty to keep the current photo.</div>
+      <img id="editImagePreview" class="image-preview d-none" alt="New photo preview">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-brand"><i class="fa-regular fa-floppy-disk me-1"></i>Save changes</button>
+      <a href="/listings/<%= listing._id %>" class="btn btn-ghost">Cancel</a>
+    </div>
+  </form>
+</div>

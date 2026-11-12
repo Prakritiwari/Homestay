@@ -1,0 +1,50 @@
+<%
+  const filterCategories = [
+    { name: "Trending", icon: "fa-solid fa-fire" },
+    { name: "Rooms", icon: "fa-solid fa-bed" },
+    { name: "Iconic Cities", icon: "fa-solid fa-mountain-city" },
+    { name: "Mountains", icon: "fa-solid fa-mountain" },
+    { name: "Castles", icon: "fa-brands fa-fort-awesome" },
+    { name: "Amazing Pools", icon: "fa-solid fa-person-swimming" },
+    { name: "Camping", icon: "fa-solid fa-campground" },
+    { name: "Farms", icon: "fa-solid fa-cow" },
+    { name: "Arctic", icon: "fa-solid fa-snowflake" },
+    { name: "Domes", icon: "fa-solid fa-igloo" },
+    { name: "Boats", icon: "fa-solid fa-ship" }
+  ];
+  const activeCat = typeof activeCategory !== "undefined" ? activeCategory : "";
+  const activeSearch = typeof searchQuery !== "undefined" ? searchQuery : "";
+  const activePrice = typeof priceFilter !== "undefined" ? priceFilter : { min: "", max: "" };
+  const activeRating = typeof ratingFilter !== "undefined" ? ratingFilter : { min: "" };
+  const activeSort = typeof currentSort !== "undefined" ? currentSort : "oldest";
+
+  // Keep every other active filter when switching category
+  function categoryHref(name) {
+    const params = new URLSearchParams();
+    if(name) params.set("category", name);
+    if(activeSearch) params.set("query", activeSearch);
+    if(activePrice.min !== "" && activePrice.min !== undefined) params.set("minPrice", activePrice.min);
+    if(activePrice.max !== "" && activePrice.max !== undefined) params.set("maxPrice", activePrice.max);
+    if(activeRating.min !== "" && activeRating.min !== undefined) params.set("minRating", activeRating.min);
+    if(activeSort && activeSort !== "oldest") params.set("sort", activeSort);
+    const queryString = params.toString();
+    return queryString ? `/listings?${queryString}` : "/listings";
+  }
+%>
+
+<div id="filters">
+  <div class="filter <%= !activeCat ? 'active' : '' %>">
+    <div><a class="filterOptions" href="<%= categoryHref("") %>" aria-label="All stays"><i class="fa-solid fa-border-all"></i></a></div>
+    <p>All</p>
+  </div>
+  <% filterCategories.forEach(function(category){ %>
+    <div class="filter <%= activeCat === category.name ? 'active' : '' %>">
+      <div>
+        <a class="filterOptions" href="<%= categoryHref(category.name) %>">
+          <i class="<%= category.icon %>"></i>
+        </a>
+      </div>
+      <p><%= category.name %></p>
+    </div>
+  <% }); %>
+</div>

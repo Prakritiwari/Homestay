@@ -2,8 +2,9 @@ const express = require("express");
 const router = express.Router();
 const wrapAsync = require("../utils/wrapAsync.js");
 const Listing = require("../models/listing.js");
-const {isLoggedIn, isOwner, validateListing} = require("../middleware.js");
+const {isLoggedIn, isOwner, validateListing, validateBooking} = require("../middleware.js");
 const listingController = require("../controllers/listings.js");
+const bookingController = require("../controllers/bookings.js");
 const multer = require("multer");
 const {storage } = require("../cloudConfig.js");
 const upload = multer({ storage });
@@ -23,7 +24,21 @@ router
  //new route
  router.get("/new",isLoggedIn , listingController.renderNewForm);
 
-router.get("/filter/:category", listingController.renderCategory);
+router.get("/filter/:category", wrapAsync(listingController.renderCategory));
+
+//search route
+router.get("/search", wrapAsync(listingController.searchListings));
+
+//my listings route
+router.get("/mine", isLoggedIn, wrapAsync(listingController.myListings));
+
+//reservation + booking payment routes
+router.get("/:id/reserve", isLoggedIn, wrapAsync(bookingController.renderReservation));
+
+router.post("/:id/bookings",
+   isLoggedIn,
+   validateBooking,
+   wrapAsync(bookingController.createBooking));
 
 router
    .route("/:id")

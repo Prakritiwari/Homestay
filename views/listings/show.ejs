@@ -1,111 +1,241 @@
 <% layout("/layouts/boilerplate") %>
-<body>
-  
+
+<%
+  const reviews = listing.reviews || [];
+  const reviewCount = reviews.length;
+  const avgRating = reviewCount
+    ? reviews.reduce(function(sum, review){ return sum + (review.rating || 0); }, 0) / reviewCount
+    : 0;
+  const imageUrl = listing.image && listing.image.url ? listing.image.url : null;
+  const hostName = listing.owner && listing.owner.username ? listing.owner.username : "Homestay host";
+  const hostInitial = hostName.charAt(0).toUpperCase();
+  const isOwner = currUser && listing.owner && listing.owner._id && listing.owner._id.equals(currUser._id);
+  const price = listing.price || 0;
+  const priceWithTax = Math.round(price * 1.18);
+  const hasGeometry = listing.geometry && Array.isArray(listing.geometry.coordinates) && listing.geometry.coordinates.length === 2;
+  const today = new Date().toISOString().slice(0, 10);
+  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+%>
 
 <script>
-  const mapToken = "<%=process.env.MAP_TOKEN%>";
-  const listing = <%- JSON.stringify(listing) %>
+  const mapToken = "<%= process.env.MAP_TOKEN %>";
+  const listing = <%- JSON.stringify(listing) %>;
 </script>
 
-    <div class="row mt-3">
-        <div class="col-8 offset-3">
-    <h3><b><%=listing.title%></b></h3>
-        </div>
-    <div class="card col-6 offset-3 show-card listing-card" >
-        <img src="<%=listing.image.url%>" class="card-img-top show-img" alt="listing-image">
-        <div class="card-body">
-          <p class="card-text"> Owned by <i><%=listing.owner.username %></i> </p>
-          <p class="card-text"> <%=listing.description%> </p>
-      
-          <p class="card-text" >&#8377;<%=listing.price.toLocaleString("en-IN")%></p>
-          <p class="card-text" >Listing Category: <b><%=listing.category%></b> </p>
-      
-          <p class="card-text"><%=listing.country%> </p>
-          <p class="card-text"><%=listing.location%></p>
-    
-        </div>
+<section class="show-header">
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+    <div>
+      <h1><%= listing.title %></h1>
+      <div class="show-meta">
+        <span><i class="fa-solid fa-star me-1" style="color: var(--brand);"></i>
+          <% if(reviewCount){ %><%= avgRating.toFixed(1) %> (<%= reviewCount %> review<%= reviewCount === 1 ? "" : "s" %>)<% } else { %>New listing<% } %>
+        </span>
+        <span class="dot"><%= listing.location %><% if(listing.country){ %>, <%= listing.country %><% } %></span>
+        <% if(listing.category){ %><span class="badge-category"><%= listing.category %></span><% } %>
       </div>
-
-      <% if(currUser && listing.owner._id.equals(currUser._id)) { %>
-
-      <div class="btns">
-        <a
-         href="/listings/<%=listing._id%>/edit" 
-         class="btn btn-dark col-1 offset-3 add-btn">
-         Edit
+    </div>
+    <div class="btns">
+      <% if(isOwner){ %>
+        <a href="/listings/<%= listing._id %>/edit" class="btn btn-ghost">
+          <i class="fa-regular fa-pen-to-square me-1"></i>Edit
         </a>
-        <form method = "Post" action="/listings/<%=listing._id%>?_method=DELETE">
-            <button class="btn btn-dark offset-5">Delete</button>
+        <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE" onsubmit="return confirm('Delete this listing? This cannot be undone.');">
+          <button class="btn btn-danger-soft"><i class="fa-regular fa-trash-can me-1"></i>Delete</button>
+        </form>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="show-img-wrap mb-4">
+      <% if(imageUrl){ %>
+        <img src="<%= imageUrl %>" class="show-img" alt="<%= listing.title %>">
+      <% } else { %>
+        <div class="card-img-placeholder" style="aspect-ratio: 16 / 10;"><i class="fa-regular fa-image"></i></div>
+      <% } %>
+    </div>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2">
+      <div>
+        <h2 class="section-title mb-1">Hosted by <%= hostName %></h2>
+        <p class="card-meta mb-0"><%= listing.category ? listing.category + " · " : "" %><%= listing.location %><% if(listing.country){ %>, <%= listing.country %><% } %></p>
+      </div>
+      <div class="avatar" title="<%= hostName %>"><%= hostInitial %></div>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="mb-4">
+      <h2 class="section-title">About this place</h2>
+      <p class="description-text mb-0"><%= listing.description %></p>
+    </div>
+
+    <ul class="info-list mb-4">
+      <li><i class="fa-solid fa-location-dot"></i><span><strong><%= listing.location %></strong>, <%= listing.country %></span></li>
+      <% if(listing.category){ %><li><i class="fa-solid fa-house-chimney"></i><span>Category: <strong><%= listing.category %></strong></span></li><% } %>
+      <li><i class="fa-solid fa-indian-rupee-sign"></i><span><strong>&#8377;<%= price.toLocaleString("en-IN") %></strong> per night</span></li>
+      <li><i class="fa-solid fa-shield-halved"></i><span>Exact location shared after booking</span></li>
+    </ul>
+
+    <div class="mb-5">
+      <h2 class="section-title">Where you&rsquo;ll be</h2>
+      <% if(hasGeometry){ %>
+        <div id="map"></div>
+      <% } else { %>
+        <div class="empty-state py-4">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <p class="mb-0">Map location is not available for this listing.</p>
+        </div>
+      <% } %>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="mb-3">
+      <h2 class="section-title">
+        <i class="fa-solid fa-star me-1" style="color: var(--brand);"></i>
+        <% if(reviewCount){ %><%= avgRating.toFixed(1) %> · <%= reviewCount %> review<%= reviewCount === 1 ? "" : "s" %><% } else { %>No reviews yet<% } %>
+      </h2>
+    </div>
+
+    <% if(currUser){ %>
+      <div class="review-form-card mb-4">
+        <h4 class="section-title">Leave a review</h4>
+        <form action="/listings/<%= listing.id %>/reviews" method="post" novalidate class="needs-validation">
+          <div class="mb-3">
+            <label class="form-label d-block">Your rating</label>
+            <fieldset class="starability-slot m-0">
+              <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="5" checked aria-label="5 stars" />
+              <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+              <label for="first-rate1" title="Terrible">1 star</label>
+              <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+              <label for="first-rate2" title="Not good">2 stars</label>
+              <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+              <label for="first-rate3" title="Average">3 stars</label>
+              <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+              <label for="first-rate4" title="Very good">4 stars</label>
+              <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+              <label for="first-rate5" title="Amazing">5 stars</label>
+            </fieldset>
+          </div>
+
+          <div class="mb-3">
+            <label for="review-comment" class="form-label">Your review</label>
+            <textarea id="review-comment" name="review[comment]" rows="4" class="form-control" placeholder="Share what the stay was like..." required></textarea>
+            <div class="invalid-feedback">Please write a short review.</div>
+          </div>
+          <button class="btn btn-brand">Submit review</button>
         </form>
       </div>
-    </div>
-
+    <% } else { %>
+      <div class="review-form-card mb-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="text-muted">Log in to leave a review and help other travellers.</span>
+        <a href="/login" class="btn btn-brand btn-sm">Log in</a>
+      </div>
     <% } %>
 
-    <div class="col-8 offset-3 mb-3">
-    
-    <% if(currUser) {%>
-      <hr>
-    <h4>Leave a Review!</h4>
-    <form action="/listings/<%=listing.id%>/reviews" method="post" novalidate class="needs-validation">
-     
-    <div class="mb-3 mt-3">
-      <label for="rating" class="form-label">Give a rating:</label>
-      <fieldset class="starability-slot">
-        <!-- <legend>First rating:</legend> -->
-        <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="1" checked aria-label="No rating." />
-        <input type="radio" id="first-rate1" name="review[rating]" value="1" />
-        <label for="first-rate1" title="Terrible">1 star</label>
-        <input type="radio" id="first-rate2" name="review[rating]" value="2" />
-        <label for="first-rate2" title="Not good">2 stars</label>
-        <input type="radio" id="first-rate3" name="review[rating]" value="3" />
-        <label for="first-rate3" title="Average">3 stars</label>
-        <input type="radio" id="first-rate4" name="review[rating]" value="4" />
-        <label for="first-rate4" title="Very good">4 stars</label>
-        <input type="radio" id="first-rate5" name="review[rating]" value="5" />
-        <label for="first-rate5" title="Amazing">5 stars</label>
-      </fieldset>
-    </div>
-
-      <div class="mb-3 mt-3">
-        <label for="comment">Leave a comment</label>
-        <textarea name="review[comment]" rows="5" cols="30"
-        class="form-control" required></textarea>
-        <div class="invalid-feedback">Enter valid feedback</div>
+    <% if(reviewCount > 0){ %>
+      <div class="reviews-grid">
+        <% for(const review of reviews){ %>
+          <%
+            const authorName = review.author && review.author.username ? review.author.username : "Guest";
+            const canDelete = currUser && review.author && review.author._id && review.author._id.equals(currUser._id);
+            let reviewDate = "";
+            try { reviewDate = new Date(review.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }); } catch (e) {}
+          %>
+          <article class="review-card">
+            <div class="review-head">
+              <span class="avatar avatar-sm"><%= authorName.charAt(0).toUpperCase() %></span>
+              <div class="flex-grow-1">
+                <strong><%= authorName %></strong>
+                <div class="review-date"><%= reviewDate %></div>
+              </div>
+              <span class="stars-inline">
+                <% for(let i = 1; i <= 5; i++){ %>
+                  <i class="fa-<%= i <= Math.round(review.rating) ? "solid" : "regular" %> fa-star"></i>
+                <% } %>
+              </span>
+            </div>
+            <p class="mb-2"><%= review.comment %></p>
+            <% if(canDelete){ %>
+              <form action="/listings/<%= listing._id %>/reviews/<%= review.id %>?_method=DELETE" method="post" class="m-0">
+                <button class="btn btn-sm btn-danger-soft">Delete review</button>
+              </form>
+            <% } %>
+          </article>
+        <% } %>
       </div>
-      <button class="btn btn-outline-dark">Submit</button>
-    </form>
-    <hr>
+    <% } else { %>
+      <div class="empty-state py-4">
+        <i class="fa-regular fa-comment-dots"></i>
+        <p class="mb-0">Be the first to review this stay.</p>
+      </div>
     <% } %>
-    
+  </div>
 
-    <% if(listing.reviews.length > 0) { %>
-    <div class="row">
-      <p><b>All Reviews</b></p>
-    <% for(review of listing.reviews){ %>
-    <div class="card col-5 ms-3 mb-2">
-      <div class="card-body">
-        <h4 class="card-title"><%= review.author.username %></h4>
-        <p class="card-text"><%= review.rating%> stars</p>
-        <p class="starability-result card text" data-rating= "<%= review.rating%>" ></p>
-        <p class="card-text"><%=review.comment%></p>
-        <div >
-        <form  class="mb-2" action="/listings/<%=listing._id%>/reviews/<%=review.id%>?_method=DELETE" method="post">
-          <button class="btn btn-sm btn-dark">Delete</button>
-        </form>
+  <div class="col-lg-4">
+    <aside class="booking-card">
+      <div class="booking-price">&#8377;<%= price.toLocaleString("en-IN") %> <span>/ night</span></div>
+      <div class="booking-gst">&#8377;<%= priceWithTax.toLocaleString("en-IN") %> total incl. 18% GST</div>
+
+      <form action="/listings/<%= listing._id %>/reserve" method="GET" class="booking-form" id="bookingForm" data-price="<%= price %>">
+        <div class="booking-date-grid">
+          <div>
+            <label class="form-label" for="checkIn">Check-in</label>
+            <input type="date" id="checkIn" name="checkIn" class="form-control" min="<%= today %>" required>
+          </div>
+          <div>
+            <label class="form-label" for="checkOut">Check-out</label>
+            <input type="date" id="checkOut" name="checkOut" class="form-control" min="<%= tomorrow %>" required>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          <label class="form-label" for="guests">Guests</label>
+          <select id="guests" name="guests" class="form-select">
+            <% for(let i = 1; i <= 8; i++){ %>
+              <option value="<%= i %>"><%= i %> guest<%= i === 1 ? "" : "s" %></option>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="booking-preview d-none" id="bookingPreview">
+          <div><span id="previewNights">0 nights</span><span id="previewSubtotal">&#8377;0</span></div>
+          <div><span>GST (18%)</span><span id="previewTax">&#8377;0</span></div>
+          <div class="booking-preview-total"><span>Total</span><span id="previewTotal">&#8377;0</span></div>
+        </div>
+
+        <% if(isOwner){ %>
+          <div class="booking-note mt-3"><i class="fa-solid fa-circle-info me-1"></i>This is your listing.</div>
+        <% } else { %>
+          <button class="btn btn-brand w-100 mt-3" type="submit">
+            <i class="fa-regular fa-calendar-check me-1"></i><%= currUser ? "Reserve" : "Log in to reserve" %>
+          </button>
+          <div class="booking-note">
+            <i class="fa-solid fa-lock me-1"></i><%= currUser ? "Payment happens on the next step" : "You'll be asked to log in first" %>
+          </div>
+        <% } %>
+      </form>
+
+      <ul class="info-list">
+        <li><i class="fa-solid fa-user"></i><span>Hosted by <strong><%= hostName %></strong></span></li>
+        <li><i class="fa-solid fa-location-dot"></i><span><%= listing.location %>, <%= listing.country %></span></li>
+        <% if(listing.category){ %><li><i class="fa-solid fa-house-chimney"></i><span><%= listing.category %></span></li><% } %>
+        <li><i class="fa-solid fa-star" style="color: var(--brand);"></i><span><%= reviewCount ? avgRating.toFixed(1) + " from " + reviewCount + " review" + (reviewCount === 1 ? "" : "s") : "New listing" %></span></li>
+      </ul>
+
+      <div class="owner-row">
+        <span class="avatar"><%= hostInitial %></span>
+        <div>
+          <strong class="d-block"><%= hostName %></strong>
+          <span class="card-meta">Host</span>
+        </div>
       </div>
-      </div>
-       <% } %>
-    </div>
+    </aside>
   </div>
-  <% } %>
-  </div>
-   <div class="col-6 offset-3 mb-3">
-    <h3>Where you'll be</h3>
-    <div id="map"></div>
-  </div>
+</div>
 
-  <script src="/js/map.js"></script>
-  
-
-</body>
+<script src="/js/map.js"></script>
+<script src="/js/booking.js"></script>

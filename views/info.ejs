@@ -1,0 +1,12 @@
+<% layout("/layouts/boilerplate") %>
+
+<div class="form-card">
+  <h3><%= title %></h3>
+  <p class="form-sub">Last updated <%= new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" }) %></p>
+
+  <% paragraphs.forEach(function(paragraph){ %>
+    <p class="description-text"><%= paragraph %></p>
+  <% }); %>
+
+  <a href="/listings" class="btn btn-brand mt-2">Back to stays</a>
+</div>

@@ -1,0 +1,117 @@
+<% layout("/layouts/boilerplate") %>
+
+<%
+  const listing = booking.listing;
+  const imageUrl = listing && listing.image && listing.image.url ? listing.image.url : null;
+  const methodLabels = { card: "Card", upi: "UPI", netbanking: "Net banking" };
+  const shortBookingId = booking._id.toString().slice(-8).toUpperCase();
+%>
+
+<section class="booking-confirm">
+  <div class="booking-confirm-icon">
+    <i class="fa-solid fa-check"></i>
+  </div>
+  <h1><%= booking.status === "confirmed" ? "Booking confirmed!" : booking.status === "cancelled" ? "Booking cancelled" : "Booking received" %></h1>
+  <p>
+    <% if(booking.status === "confirmed"){ %>
+      Your stay at <strong><%= listing ? listing.title : "your chosen place" %></strong> is booked. We've recorded your payment and trip details below.
+    <% } else if(booking.status === "cancelled"){ %>
+      This booking has been cancelled and the demo payment has been marked as refunded.
+    <% } else { %>
+      We've received your booking and will confirm it shortly.
+    <% } %>
+  </p>
+</section>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="checkout-card">
+      <div class="booking-status-row">
+        <span class="status-badge status-<%= booking.status %>"><%= booking.status %></span>
+        <span class="status-badge status-<%= booking.paymentStatus %>"><%= booking.paymentStatus %></span>
+      </div>
+
+      <h2 class="section-title">Your stay</h2>
+      <div class="checkout-trip">
+        <div><span>Check-in</span><strong><%= formatDate(booking.checkIn) %></strong></div>
+        <div><span>Check-out</span><strong><%= formatDate(booking.checkOut) %></strong></div>
+        <div><span>Guests</span><strong><%= booking.guests %> guest<%= booking.guests === 1 ? "" : "s" %></strong></div>
+        <div><span>Nights</span><strong><%= booking.nights %></strong></div>
+      </div>
+
+      <hr>
+
+      <h2 class="section-title">Payment details</h2>
+      <div class="booking-detail-grid">
+        <div class="detail-item">
+          <span>Method</span>
+          <strong>
+            <%= methodLabels[booking.paymentMethod] || booking.paymentMethod %>
+            <% if(booking.cardLast4){ %> &middot; &bull;&bull;&bull;&bull; <%= booking.cardLast4 %><% } %>
+          </strong>
+        </div>
+        <div class="detail-item">
+          <span>Transaction ID</span>
+          <strong><%= booking.transactionId || "Pending" %></strong>
+        </div>
+        <div class="detail-item">
+          <span>Booked on</span>
+          <strong><%= formatDate(booking.createdAt) %></strong>
+        </div>
+        <div class="detail-item">
+          <span>Booking ID</span>
+          <strong><%= shortBookingId %></strong>
+        </div>
+      </div>
+
+      <% if(canCancel){ %>
+        <form action="/bookings/<%= booking._id %>/cancel" method="POST" class="mt-4" onsubmit="return confirm('Cancel this booking and refund the demo payment?');">
+          <button class="btn btn-danger-soft w-100"><i class="fa-regular fa-circle-xmark me-1"></i>Cancel booking</button>
+        </form>
+        <p class="form-hint text-center mt-2 mb-0">Free cancellation before check-in. Demo payments are refunded instantly.</p>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <aside class="checkout-summary">
+      <div class="checkout-listing">
+        <% if(imageUrl){ %>
+          <img src="<%= imageUrl %>" alt="<%= listing.title %>">
+        <% } else { %>
+          <span class="checkout-listing-placeholder"><i class="fa-regular fa-image"></i></span>
+        <% } %>
+        <div>
+          <h2><%= listing ? listing.title : "Listing removed" %></h2>
+          <% if(listing){ %>
+            <p class="card-meta"><%= listing.location %><% if(listing.country){ %>, <%= listing.country %><% } %></p>
+            <% if(listing.category){ %><span class="badge-category mt-2 d-inline-block"><%= listing.category %></span><% } %>
+          <% } %>
+        </div>
+      </div>
+
+      <hr>
+
+      <h2 class="section-title">Price details</h2>
+      <div class="price-row">
+        <span>&#8377;<%= booking.pricePerNight.toLocaleString("en-IN") %> &times; <%= booking.nights %> night<%= booking.nights === 1 ? "" : "s" %></span>
+        <span>&#8377;<%= booking.subtotal.toLocaleString("en-IN") %></span>
+      </div>
+      <div class="price-row">
+        <span>GST (18%)</span>
+        <span>&#8377;<%= booking.tax.toLocaleString("en-IN") %></span>
+      </div>
+      <div class="price-row total">
+        <span>Total (INR)</span>
+        <span>&#8377;<%= booking.total.toLocaleString("en-IN") %></span>
+      </div>
+
+      <div class="d-grid gap-2 mt-4">
+        <% if(listing){ %>
+          <a href="/listings/<%= listing._id %>" class="btn btn-ghost">View listing</a>
+        <% } %>
+        <a href="/bookings" class="btn btn-brand">My trips</a>
+      </div>
+    </aside>
+  </div>
+</div>

@@ -20,6 +20,8 @@ const User = require("./models/user.js")
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
+const homeRouter = require("./routes/home.js");
+const bookingRouter = require("./routes/booking.js");
 const { saveRedirectUrl } = require("./middleware.js");
 
 
@@ -72,15 +74,42 @@ app.use((req, res, next) => {
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
     res.locals.currUser = req.user;
+    res.locals.currentPath = req.path;
     next();
 });
 
+app.use("/", homeRouter);
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
+app.use("/bookings", bookingRouter);
 app.use("/", userRouter);
 
+app.get("/privacy", (req, res) => {
+    res.render("info.ejs", {
+        pageTitle: "Privacy",
+        title: "Privacy policy",
+        paragraphs: [
+            "Homestay only stores the account details you provide when you sign up, such as your username, email address and the listings you create.",
+            "Listing details, photos and reviews are public so travellers can discover and evaluate your stay. Your exact address is never shown publicly — only the approximate map location is displayed.",
+            "We never sell your personal data. You can request deletion of your account and listings at any time by contacting hello@homestay.example.",
+        ],
+    });
+});
 
-app.all("*sf", (req, res, next ) => {
+app.get("/terms", (req, res) => {
+    res.render("info.ejs", {
+        pageTitle: "Terms",
+        title: "Terms of use",
+        paragraphs: [
+            "By using Homestay you agree to provide accurate information about the places you list and to keep your listing details, pricing and availability up to date.",
+            "Guests and hosts are responsible for communicating respectfully and for honouring confirmed bookings. Reviews must reflect a real stay experience.",
+            "Prices are shown in Indian rupees. Where GST is displayed, an 18% tax estimate is added for transparency. Homestay may update these terms as the service evolves.",
+        ],
+    });
+});
+
+
+app.use((req, res, next ) => {
     next( new ExpressError(404, "Page not found!"));
 });
 

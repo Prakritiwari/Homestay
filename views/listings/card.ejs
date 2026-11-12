@@ -1,0 +1,46 @@
+<%
+  const reviews = listing.reviews || [];
+  const reviewCount = reviews.length;
+  const avgRating = reviewCount
+    ? reviews.reduce(function(sum, review){ return sum + (review.rating || 0); }, 0) / reviewCount
+    : 0;
+  const imageUrl = listing.image && listing.image.url ? listing.image.url : null;
+  const price = listing.price || 0;
+  const priceWithTax = Math.round(price * 1.18);
+%>
+
+<a href="/listings/<%= listing._id %>" class="listing-link">
+  <article class="card listing-card">
+    <div class="card-img-wrap">
+      <% if(imageUrl){ %>
+        <img src="<%= imageUrl %>" class="card-img-top" alt="<%= listing.title %>" loading="lazy">
+      <% } else { %>
+        <div class="card-img-placeholder"><i class="fa-regular fa-image"></i></div>
+      <% } %>
+      <% if(listing.category){ %>
+        <span class="category-badge"><%= listing.category %></span>
+      <% } %>
+    </div>
+
+    <div class="card-body">
+      <h5 class="card-title"><%= listing.title %></h5>
+      <p class="card-meta">
+        <%= listing.location %><% if(listing.country){ %>, <%= listing.country %><% } %>
+      </p>
+      <div class="card-bottom">
+        <div class="rating-badge <%= reviewCount ? '' : 'new' %>">
+          <% if(reviewCount){ %>
+            <i class="fa-solid fa-star"></i><%= avgRating.toFixed(1) %>
+            <span class="fw-normal text-muted">(<%= reviewCount %>)</span>
+          <% } else { %>
+            New
+          <% } %>
+        </div>
+        <div class="card-price">
+          <span class="price-base">&#8377;<%= price.toLocaleString("en-IN") %><span class="price-unit">/night</span></span>
+          <span class="price-total d-none">&#8377;<%= priceWithTax.toLocaleString("en-IN") %><span class="price-unit">/night incl. GST</span></span>
+        </div>
+      </div>
+    </div>
+  </article>
+</a>

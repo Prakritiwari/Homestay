@@ -1,9 +1,11 @@
-<% layout("/layouts/boilerplate") %> 
+<% layout("/layouts/boilerplate") %>
 
-<div class="row mt-3">
-    <div class="alert alert-danger col-6 offset-3" role="alert">
-        <p class="alert-heading" >  <%= err.message %> 
-            </p>
-    </div>
+<div class="error-wrap">
+  <div class="error-code"><%= err.statusCode || 500 %></div>
+  <h2><%= err.statusCode === 404 ? "We couldn't find that page" : "Something went wrong" %></h2>
+  <p><%= err.message || "An unexpected error occurred. Please try again." %></p>
+  <div class="d-flex justify-content-center gap-2">
+    <a href="/listings" class="btn btn-brand">Browse stays</a>
+    <a href="javascript:history.back()" class="btn btn-ghost">Go back</a>
+  </div>
 </div>
-<!-- <%= err.stack %> -->

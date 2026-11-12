@@ -1,0 +1,88 @@
+<%
+  const filterCategoryOptions = typeof categories !== "undefined" ? categories : [];
+  const selectedCategory = typeof activeCategory !== "undefined" ? activeCategory : "";
+  const currentSearch = typeof searchQuery !== "undefined" ? searchQuery : "";
+  const currentSortValue = typeof currentSort !== "undefined" ? currentSort : "oldest";
+  const currentPrice = typeof priceFilter !== "undefined" ? priceFilter : { min: "", max: "" };
+  const currentRating = typeof ratingFilter !== "undefined" ? ratingFilter : { min: "" };
+
+  const minPriceValue = currentPrice.min !== "" && currentPrice.min !== undefined ? currentPrice.min : "";
+  const maxPriceValue = currentPrice.max !== "" && currentPrice.max !== undefined ? currentPrice.max : "";
+  const minRatingValue = currentRating.min !== "" && currentRating.min !== undefined ? String(currentRating.min) : "";
+
+  const pricePresets = [
+    { label: "Under ₹1,000", min: "", max: "1000" },
+    { label: "₹1,000 – ₹2,500", min: "1000", max: "2500" },
+    { label: "₹2,500 – ₹5,000", min: "2500", max: "5000" },
+    { label: "₹5,000+", min: "5000", max: "" },
+  ];
+
+  const ratingPresets = [
+    { label: "Any rating", value: "" },
+    { label: "3.0 & up", value: "3" },
+    { label: "4.0 & up", value: "4" },
+    { label: "4.5 & up", value: "4.5" },
+  ];
+%>
+
+<form method="GET" action="/listings" class="filter-panel" id="listingFilterForm">
+  <% if(currentSearch){ %>
+    <input type="hidden" name="query" value="<%= currentSearch %>">
+  <% } %>
+  <input type="hidden" name="sort" value="<%= currentSortValue %>">
+
+  <div class="filter-panel-head">
+    <h3><i class="fa-solid fa-sliders"></i> Filters</h3>
+    <a href="/listings" class="filter-reset-link">Clear all</a>
+  </div>
+
+  <div class="filter-group">
+    <label class="filter-heading" for="filterCategory">Category</label>
+    <select name="category" id="filterCategory" class="form-select filter-select">
+      <option value="">All categories</option>
+      <% filterCategoryOptions.forEach(function(category){ %>
+        <option value="<%= category %>" <%= selectedCategory === category ? "selected" : "" %>><%= category %></option>
+      <% }); %>
+    </select>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-heading">Price per night</span>
+    <div class="filter-chips">
+      <% pricePresets.forEach(function(preset){ %>
+        <button
+          type="button"
+          class="filter-chip <%= String(minPriceValue) === preset.min && String(maxPriceValue) === preset.max ? "active" : "" %>"
+          data-price-preset
+          data-min="<%= preset.min %>"
+          data-max="<%= preset.max %>"><%= preset.label %></button>
+      <% }); %>
+    </div>
+    <div class="price-inputs">
+      <label class="visually-hidden" for="filterMinPrice">Minimum price</label>
+      <input type="number" id="filterMinPrice" name="minPrice" min="0" step="100" placeholder="Min ₹" value="<%= minPriceValue %>">
+      <span aria-hidden="true">–</span>
+      <label class="visually-hidden" for="filterMaxPrice">Maximum price</label>
+      <input type="number" id="filterMaxPrice" name="maxPrice" min="0" step="100" placeholder="Max ₹" value="<%= maxPriceValue %>">
+    </div>
+  </div>
+
+  <div class="filter-group">
+    <span class="filter-heading">Guest rating</span>
+    <div class="rating-options">
+      <% ratingPresets.forEach(function(preset){ %>
+        <label class="rating-option">
+          <input type="radio" name="minRating" value="<%= preset.value %>" <%= minRatingValue === preset.value ? "checked" : "" %>>
+          <span>
+            <% if(preset.value){ %><i class="fa-solid fa-star"></i><% } %>
+            <%= preset.label %>
+          </span>
+        </label>
+      <% }); %>
+    </div>
+  </div>
+
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-brand">Apply filters</button>
+  </div>
+</form>
