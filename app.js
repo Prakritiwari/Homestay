@@ -32,19 +32,30 @@ app.set("view engine", "ejs");
 app.use(express.urlencoded({extended:true}));
 app.use(express.static(path.join(__dirname, "public")));
 
+const MONGO_URI = process.env.MONGO_URI;
+const MONGO_DB_NAME = process.env.MONGO_DB_NAME || "homestay";
+
 async function main(){
-    await mongoose.connect("mongodb://127.0.0.1:27017/homestay");
+    if(!MONGO_URI){
+        throw new Error("MONGO_URI is not set. Add it to your .env file.");
+    }
+
+    const options = { serverSelectionTimeoutMS: 10000 };
+
+    // A URI like mongodb+srv://user:pass@cluster.mongodb.net/ has no database
+    // name, and the driver then silently falls back to the "test" database.
+    // Use MONGO_DB_NAME in that case so we always talk to the right database.
+    const hasDatabaseInUri = /^mongodb(\+srv)?:\/\/[^/]+\/[^/?]+/.test(MONGO_URI);
+    if(!hasDatabaseInUri){
+        options.dbName = MONGO_DB_NAME;
+    }
+
+    await mongoose.connect(MONGO_URI, options);
+    console.log(`MongoDB connected (database: ${mongoose.connection.name})`);
 }
 
-main()
-.then( () => {
-    console.log("connection successfull with database");
-}).catch((err) => {
-    console.log(err);
-});
-
 const sessionOptions = {
-    secret : "mysupersecretstring",
+    secret : process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -118,6 +129,13 @@ app.use((err, req, res , next ) => {
     res.status(statusCode).render("error.ejs" , {err});
 });
 
-app.listen("8080", () => {
-    console.log("The port is listening from port 8080");
-});
+main()
+    .then(() => {
+        app.listen("8080", () => {
+            console.log("The port is listening from port 8080");
+        });
+    })
+    .catch((err) => {
+        console.log("MongoDB Connection Error:", err.message);
+        process.exit(1);
+    });
