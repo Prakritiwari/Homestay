@@ -19,7 +19,7 @@ const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
 const homeRouter = require("./routes/home.js");
 const bookingRouter = require("./routes/booking.js");
-const { saveRedirectUrl } = require("./middleware.js");
+const { saveRedirectUrl } = require("./middleware/index.js");
 
 
 app.engine('ejs',ejsMate);
