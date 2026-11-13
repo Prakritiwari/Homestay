@@ -94,12 +94,6 @@ node init/index.js
 3. In MongoDB Atlas, allow access from `0.0.0.0/0` (Vercel functions use dynamic IPs).
 4. Deploy. The serverless entry point is `api/index.js`; `vercel.json` rewrites all traffic to it and bundles `views/` and `public/`.
 
-Verify the deployment:
-
-```bash
-curl https://<your-domain>/health
-# {"ok":true,"commit":"<sha>","database":"connected","dbName":"homestay",...}
-```
 
 ## Notes
 
