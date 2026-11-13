@@ -9,6 +9,7 @@ module.exports.isLoggedIn = (req, res , next ) => {
         const returnTo = req.method === "GET" ? req.originalUrl : "/listings";
         req.session.redirectUrl = returnTo;
         req.flash("error", "Please log in to continue.");
+        console.log("[auth] login required:", req.method, req.originalUrl, "-> /login?returnTo=" + returnTo);
         // Pass the target in the URL too: the session store is in-memory and
         // can be lost between serverless invocations.
         return res.redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);

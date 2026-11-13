@@ -126,6 +126,17 @@ app.get("/", (req, res) => {
     res.redirect("/listings");
 });
 
+// Deployment/database check — no views, no database query.
+app.get("/health", (req, res) => {
+    res.json({
+        ok: true,
+        commit: process.env.VERCEL_GIT_COMMIT_SHA || "local",
+        database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+        dbName: mongoose.connection.name || null,
+        uptime: Math.round(process.uptime()),
+    });
+});
+
 app.get("/privacy", (req, res) => {
     res.render("info.ejs", {
         pageTitle: "Privacy",
@@ -152,6 +163,7 @@ app.get("/terms", (req, res) => {
 
 
 app.use((req, res, next ) => {
+    console.log("[404]", req.method, req.originalUrl);
     next( new ExpressError(404, "Page not found!"));
 });
 

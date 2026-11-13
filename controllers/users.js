@@ -51,6 +51,7 @@ module.exports.login = async(req, res) => {
             || "/listings";
         delete req.session.redirectUrl;
         req.flash("success", "Welcome back to Homestay!");
+        console.log("[auth] login success ->", returnTo);
         res.redirect(returnTo);
     }
 
