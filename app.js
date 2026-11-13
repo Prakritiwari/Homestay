@@ -1,9 +1,6 @@
 if(process.env.NODE_ENV != "production"){
     require('dotenv').config();
 }
-
-// console.log(process.env);
-
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -35,24 +32,26 @@ app.use(express.static(path.join(__dirname, "public")));
 const MONGO_URI = process.env.MONGO_URI;
 const MONGO_DB_NAME = process.env.MONGO_DB_NAME || "homestay";
 
-async function main(){
-    if(!MONGO_URI){
-        throw new Error("MONGO_URI is not set. Add it to your .env file.");
+async function connectDB() {
+    if (!MONGO_URI) {
+        throw new Error("MONGO_URI is not set");
     }
 
-    const options = { serverSelectionTimeoutMS: 10000 };
-
-    // A URI like mongodb+srv://user:pass@cluster.mongodb.net/ has no database
-    // name, and the driver then silently falls back to the "test" database.
-    // Use MONGO_DB_NAME in that case so we always talk to the right database.
-    const hasDatabaseInUri = /^mongodb(\+srv)?:\/\/[^/]+\/[^/?]+/.test(MONGO_URI);
-    if(!hasDatabaseInUri){
-        options.dbName = MONGO_DB_NAME;
+    if (mongoose.connection.readyState === 1) {
+        return;
     }
 
-    await mongoose.connect(MONGO_URI, options);
-    console.log(`MongoDB connected (database: ${mongoose.connection.name})`);
+    await mongoose.connect(MONGO_URI, {
+        serverSelectionTimeoutMS: 10000,
+        dbName: MONGO_DB_NAME
+    });
+
+    console.log("MongoDB Atlas Connected:", mongoose.connection.name);
 }
+
+app.connectDB = connectDB;
+
+module.exports = app;
 
 const sessionOptions = {
     secret : process.env.SESSION_SECRET,
