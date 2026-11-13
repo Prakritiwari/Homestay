@@ -5,10 +5,13 @@ const {listingSchema,reviewSchema, bookingSchema } = require("../schema.js");
 
 module.exports.isLoggedIn = (req, res , next ) => {
       if(!req.isAuthenticated()){
-        console.log(req.originalUrl)
-        req.session.redirectUrl = req.originalUrl;
-        req.flash("error", "Login to access the Listing!");
-        return res.redirect("/login");
+        // Only GET requests can be safely replayed after login.
+        const returnTo = req.method === "GET" ? req.originalUrl : "/listings";
+        req.session.redirectUrl = returnTo;
+        req.flash("error", "Please log in to continue.");
+        // Pass the target in the URL too: the session store is in-memory and
+        // can be lost between serverless invocations.
+        return res.redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
        
     } next();
     

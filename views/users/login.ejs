@@ -6,6 +6,7 @@
     <p class="auth-sub">Log in to manage your listings and reviews.</p>
 
     <form action="/login" method="post" class="needs-validation" novalidate>
+      <input type="hidden" name="returnTo" value="<%= typeof returnTo !== 'undefined' ? returnTo : '' %>">
       <div class="mb-3">
         <label for="username" class="form-label">Username</label>
         <div class="input-icon">
@@ -25,6 +26,6 @@
       <button class="btn btn-brand w-100 mt-2">Log in</button>
     </form>
 
-    <p class="auth-alt">New to Homestay? <a href="/signup">Create an account</a></p>
+    <p class="auth-alt">New to Homestay? <a href="/signup<%= typeof returnTo !== 'undefined' && returnTo ? '?returnTo=' + encodeURIComponent(returnTo) : '' %>">Create an account</a></p>
   </div>
 </div>

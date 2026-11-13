@@ -190,7 +190,7 @@ module.exports.createBooking = async (req, res) => {
     });
 
     req.flash("success", "Payment successful — your stay is booked!");
-    res.redirect(`/bookings/${booking._id}`);
+    res.redirect("/bookings");
 };
 
 module.exports.index = async (req, res) => {

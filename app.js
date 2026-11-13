@@ -17,7 +17,6 @@ const User = require("./models/user.js")
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
-const homeRouter = require("./routes/home.js");
 const bookingRouter = require("./routes/booking.js");
 const { saveRedirectUrl } = require("./middleware/index.js");
 
@@ -117,11 +116,15 @@ app.use((req, res, next) => {
     next();
 });
 
-app.use("/", homeRouter);
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/bookings", bookingRouter);
 app.use("/", userRouter);
+
+// The public home page is the listings index; the old dashboard was removed.
+app.get("/", (req, res) => {
+    res.redirect("/listings");
+});
 
 app.get("/privacy", (req, res) => {
     res.render("info.ejs", {
