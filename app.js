@@ -32,21 +32,50 @@ app.use(express.static(path.join(__dirname, "public")));
 const MONGO_URI = process.env.MONGO_URI;
 const MONGO_DB_NAME = process.env.MONGO_DB_NAME || "homestay";
 
+// Cache the in-flight connect promise so parallel requests share one connection
+let connectionPromise = null;
+
 async function connectDB() {
     if (!MONGO_URI) {
-        throw new Error("MONGO_URI is not set");
+        throw new Error("MONGO_URI is not set in the environment");
     }
 
+    // Reuse a live connection, but verify it first: serverless instances can be
+    // frozen with a dead socket while mongoose still reports readyState === 1.
     if (mongoose.connection.readyState === 1) {
-        return;
+        try {
+            await mongoose.connection.db.admin().ping();
+            return mongoose.connection;
+        } catch (err) {
+            console.error("MongoDB ping failed, reconnecting:", err.message);
+            await mongoose.disconnect().catch(() => {});
+        }
     }
 
-    await mongoose.connect(MONGO_URI, {
-        serverSelectionTimeoutMS: 10000,
-        dbName: MONGO_DB_NAME
-    });
+    if (!connectionPromise) {
+        console.log("Connecting to MongoDB Atlas...");
+        connectionPromise = mongoose
+            .connect(MONGO_URI, {
+                serverSelectionTimeoutMS: 8000,
+                connectTimeoutMS: 8000,
+                socketTimeoutMS: 45000,
+                dbName: MONGO_DB_NAME,
+                bufferCommands: false,
+            })
+            .then((mongooseInstance) => {
+                console.log("MongoDB Atlas Connected:", mongooseInstance.connection.name);
+                return mongooseInstance.connection;
+            })
+            .catch((err) => {
+                console.error("MongoDB connection failed:", err.message);
+                throw err;
+            })
+            .finally(() => {
+                connectionPromise = null;
+            });
+    }
 
-    console.log("MongoDB Atlas Connected:", mongoose.connection.name);
+    return connectionPromise;
 }
 
 app.connectDB = connectDB;
