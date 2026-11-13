@@ -128,13 +128,17 @@ app.use((err, req, res , next ) => {
     res.status(statusCode).render("error.ejs" , {err});
 });
 
-main()
-    .then(() => {
-        app.listen("8080", () => {
-            console.log("The port is listening from port 8080");
+// Local development entry point. On Vercel the app is imported by api/index.js,
+// which calls app.connectDB() for each request instead of listening on a port.
+if (require.main === module) {
+    connectDB()
+        .then(() => {
+            app.listen("8080", () => {
+                console.log("The port is listening from port 8080");
+            });
+        })
+        .catch((err) => {
+            console.log("MongoDB Connection Error:", err.message);
+            process.exit(1);
         });
-    })
-    .catch((err) => {
-        console.log("MongoDB Connection Error:", err.message);
-        process.exit(1);
-    });
+}
